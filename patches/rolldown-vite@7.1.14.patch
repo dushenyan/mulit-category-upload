@@ -1,0 +1,24 @@
+diff --git a/dist/node/cli.js b/dist/node/cli.js
+index cdaac85a4d6a7e0cc17abd5c1b439e04cbbe1143..bd22f28713d6ca613965ac7c0feff2b2ed22ce6b 100644
+--- a/dist/node/cli.js
++++ b/dist/node/cli.js
+@@ -588,8 +588,8 @@ cli.command("[root]", "start dev server").alias("serve").alias("dev").option("--
+ 		const viteStartTime = global.__vite_start_time ?? false;
+ 		const startupDurationString = viteStartTime ? import_picocolors.default.dim(`ready in ${import_picocolors.default.reset(import_picocolors.default.bold(Math.ceil(performance.now() - viteStartTime)))} ms`) : "";
+ 		const hasExistingLogs = process.stdout.bytesWritten > 0 || process.stderr.bytesWritten > 0;
+-		info(`\n  ${import_picocolors.default.green(`${import_picocolors.default.bold("ROLLDOWN-VITE")} v${VERSION}`)}${modeString}  ${startupDurationString}\n`, { clear: !hasExistingLogs });
+-		server.printUrls();
++		// info(`\n  ${import_picocolors.default.green(`${import_picocolors.default.bold("ROLLDOWN-VITE")} v${VERSION}`)}${modeString}  ${startupDurationString}\n`, { clear: !hasExistingLogs });
++		// server.printUrls();
+ 		const customShortcuts = [];
+ 		if (profileSession) customShortcuts.push({
+ 			key: "p",
+@@ -612,7 +612,7 @@ cli.command("[root]", "start dev server").alias("serve").alias("dev").option("--
+ 			}
+ 		});
+ 		server.bindCLIShortcuts({
+-			print: true,
++			print: false,
+ 			customShortcuts
+ 		});
+ 	} catch (e) {

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>文件分片上传</title>
+    <style>
+      .file-info {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <input type="file" id="fileInput" />
+    <button id="uploadBtn">上传</button>
+    <div id="fileInfo" class="file-info"></div>
+    ​
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const fileInfo = document.getElementById("fileInfo");
+
+      let file = null;
+      let fileHash = "";
+      let chunkSize = 1 * 1024 * 1024; // 1MB
+      let chunks = [];
+      let uploadedChunks = 0;
+
+      // 选择文件
+      fileInput.addEventListener("change", (e) => {
+        file = e.target.files[0];
+        if (!file) return;
+
+        fileInfo.innerHTML = `
+                <p>文件名: ${file.name}</p>
+                <p>文件大小: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p>分片大小: ${(chunkSize / 1024 / 1024).toFixed(2)} MB</p>
+                <p>总分片数: ${Math.ceil(file.size / chunkSize)}</p>
+            `;
+
+        // 生成文件唯一标识
+        generateFileHash(file).then((hash) => {
+          fileHash = hash;
+          console.log("文件hash:", fileHash);
+        });
+      });
+
+      // 上传按钮
+      uploadBtn.addEventListener("click", async () => {
+        if (!file) {
+          alert("请先选择文件");
+          return;
+        }
+
+        // 分割文件
+        chunks = createChunks(file, chunkSize);
+
+        // 上传所有分片
+        await uploadChunks(chunks);
+
+        // 合并请求
+        await mergeRequest();
+
+        alert("上传完成!");
+      });
+
+      // 生成文件hash
+      async function generateFileHash(file) {
+        return new Promise((resolve) => {
+          const spark = new SparkMD5.ArrayBuffer();
+          const reader = new FileReader();
+          const size = file.size;
+          const offset = 2 * 1024 * 1024;
+
+          // 读取文件前2M，中间2M，最后2M的内容来计算hash
+          const chunks = [
+            file.slice(0, offset),
+            file.slice(size / 2 - offset / 2, size / 2 + offset / 2),
+            file.slice(size - offset, size),
+          ];
+
+          let currentChunk = 0;
+
+          reader.onload = (e) => {
+            spark.append(e.target.result);
+            currentChunk++;
+
+            if (currentChunk < chunks.length) {
+              reader.readAsArrayBuffer(chunks[currentChunk]);
+            } else {
+              resolve(spark.end());
+            }
+          };
+
+          reader.readAsArrayBuffer(chunks[currentChunk]);
+        });
+      }
+
+      // 分割文件
+      function createChunks(file, chunkSize) {
+        const chunks = [];
+        let start = 0;
+
+        while (start < file.size) {
+          chunks.push({
+            index: chunks.length,
+            file: file.slice(start, start + chunkSize),
+          });
+          start += chunkSize;
+        }
+
+        return chunks;
+      }
+
+      // 上传分片
+      async function uploadChunks(existingChunks = []) {
+        const uploadedChunkIndexes = existingChunks.map((c) => c.index);
+
+        for (let i = 0; i < chunks.length; i++) {
+          const formData = new FormData();
+          formData.append("file", chunks[i].file);
+          const searchParams = new URLSearchParams();
+          searchParams.append("index", chunks[i].index);
+          searchParams.append("fileHash", fileHash);
+
+          try {
+            await fetch(
+              "http://localhost:3000/upload?" + searchParams.toString(),
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
+          } catch (err) {
+            console.error("上传失败:", err);
+            break;
+          }
+        }
+      }
+
+      // 合并请求
+      async function mergeRequest() {
+        try {
+          await fetch("http://localhost:3000/upload/merge", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fileHash: fileHash,
+              fileName: file.name,
+              total: chunks.length,
+            }),
+          });
+        } catch (err) {
+          console.error("合并失败:", err);
+        }
+      }
+    </script>
+    ​
+    <!-- 用于生成文件hash的库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+  </body>
+</html>
