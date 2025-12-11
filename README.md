@@ -79,7 +79,7 @@ pnpm build
 ## 项目结构
 
 ```
-➜  mulit-category-upload tree            
+➜  mulit-category-upload tree
 .
 ├── README.md
 ├── index.html
@@ -94,7 +94,7 @@ pnpm build
 │   ├── home.pug
 │   ├── index.ts
 │   └── upload
-│       
+│
 ├── src
 │   ├── App.vue
 │   ├── fileUtils.ts
@@ -176,7 +176,6 @@ pnpm build
 > pnpm patch rolldown-vite@7.1.14
 >
 > pnpm patch-commit /Users/shenyandu/Desktop/mulit-category-upload/node_modules/.pnpm_patches/rolldown-vite@7.1.14
-
 
 ## 联系方式
 

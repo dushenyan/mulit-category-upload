@@ -1,62 +1,8 @@
-<template>
-  <div class="upload-container">
-    <el-card class="upload-card">
-      <template #header>
-        <div class="card-header">
-          <span>文件分片上传</span>
-        </div>
-      </template>
-
-      <el-upload ref="uploadRef" class="upload-demo" drag action="#" :auto-upload="false" :on-change="handleFileChange"
-        :show-file-list="false">
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">
-          拖拽文件到此处或 <em>点击上传</em>
-        </div>
-        <template #tip>
-          <div class="el-upload__tip">
-            请选择要上传的文件
-          </div>
-        </template>
-      </el-upload>
-
-      <div v-if="fileInfo.name" class="file-info">
-        <el-descriptions title="文件信息" :column="1" border>
-          <el-descriptions-item label="文件名">{{ fileInfo.name }}</el-descriptions-item>
-          <el-descriptions-item label="文件大小">{{ formatFileSize(fileInfo.size) }}</el-descriptions-item>
-          <el-descriptions-item label="分片大小">{{ formatFileSize(chunkSize) }}</el-descriptions-item>
-          <el-descriptions-item label="总分片数">{{ Math.ceil(fileInfo.size / chunkSize) }}</el-descriptions-item>
-          <el-descriptions-item label="文件预览">
-            <el-image :src="previewUrl" :preview-src-list="[previewUrl]" fit="cover" class="preview-image" alt="预览图片"
-              style="width: 100px; height: 100px" />
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-
-      <div class="progress-container" v-if="uploadProgress > 0">
-        <el-progress :percentage="uploadProgress" :status="uploadStatus"></el-progress>
-      </div>
-
-      <div class="button-group">
-        <el-button type="primary" @click="handleUpload" :disabled="!fileInfo.name || isUploading"
-          :loading="isUploading">
-          {{ isUploading ? '上传中...' : '开始上传' }}
-        </el-button>
-        <el-button @click="resetUpload">重置</el-button>
-      </div>
-    </el-card>
-
-    <el-dialog v-model="previewDialogVisible" title="预览">
-      <img v-if="previewUrl" :src="previewUrl" class="preview-image" alt="预览图片" />
-    </el-dialog>
-  </div>
-</template>
-
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
+import type { UploadFile, UploadInstance } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
-import type { UploadInstance, UploadFile } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import { reactive, ref } from 'vue'
 import { genrateFileHash } from './fileUtils'
 import { useUpload } from './useUpload'
 
@@ -67,12 +13,12 @@ const uploadRef = ref<UploadInstance>()
 const fileInfo = reactive({
   name: '',
   size: 0,
-  type: ''
+  type: '',
 })
 
 const chunkSize = 1 * 1024 * 1024 // 1MB
 let fileHash = ''
-let chunks: { index: number; file: Blob }[] = []
+let chunks: { index: number, file: Blob }[] = []
 let file: File | null = null
 
 // 上传状态
@@ -83,15 +29,18 @@ const previewDialogVisible = ref(false)
 const previewUrl = ref('')
 
 // 格式化文件大小
-const formatFileSize = (size: number): string => {
-  if (size < 1024) return size + ' B'
-  if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
-  if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB'
-  return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+function formatFileSize(size: number): string {
+  if (size < 1024)
+    return `${size} B`
+  if (size < 1024 * 1024)
+    return `${(size / 1024).toFixed(2)} KB`
+  if (size < 1024 * 1024 * 1024)
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`
+  return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
 // 处理文件变化
-const handleFileChange = (uploadFile: UploadFile) => {
+function handleFileChange(uploadFile: UploadFile) {
   if (uploadFile.raw) {
     file = uploadFile.raw
     fileInfo.name = file.name
@@ -112,14 +61,14 @@ const handleFileChange = (uploadFile: UploadFile) => {
 }
 
 // 分割文件
-const createChunks = (file: File, chunkSize: number) => {
+function createChunks(file: File, chunkSize: number) {
   const chunks = []
   let start = 0
 
   while (start < file.size) {
     chunks.push({
       index: chunks.length,
-      file: file.slice(start, start + chunkSize)
+      file: file.slice(start, start + chunkSize),
     })
     start += chunkSize
   }
@@ -128,7 +77,7 @@ const createChunks = (file: File, chunkSize: number) => {
 }
 
 // 处理上传
-const handleUpload = async () => {
+async function handleUpload() {
   if (!file) {
     ElMessage.warning('请先选择文件')
     return
@@ -157,17 +106,19 @@ const handleUpload = async () => {
     uploadProgress.value = 100
     uploadStatus.value = 'success'
     ElMessage.success('上传完成!')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('上传失败:', error)
     uploadStatus.value = 'exception'
-    ElMessage.error('上传失败: ' + (error as Error).message)
-  } finally {
+    ElMessage.error(`上传失败: ${(error as Error).message}`)
+  }
+  finally {
     isUploading.value = false
   }
 }
 
 // 重置上传
-const resetUpload = () => {
+function resetUpload() {
   uploadRef.value?.clearFiles()
   fileInfo.name = ''
   fileInfo.size = 0
@@ -180,6 +131,78 @@ const resetUpload = () => {
   previewUrl.value = ''
 }
 </script>
+
+<template>
+  <div class="upload-container">
+    <el-card class="upload-card">
+      <template #header>
+        <div class="card-header">
+          <span>文件分片上传</span>
+        </div>
+      </template>
+
+      <el-upload
+        ref="uploadRef" class="upload-demo" drag action="#" :auto-upload="false" :on-change="handleFileChange"
+        :show-file-list="false"
+      >
+        <el-icon class="el-icon--upload">
+          <UploadFilled />
+        </el-icon>
+        <div class="el-upload__text">
+          拖拽文件到此处或 <em>点击上传</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">
+            请选择要上传的文件
+          </div>
+        </template>
+      </el-upload>
+
+      <div v-if="fileInfo.name" class="file-info">
+        <el-descriptions title="文件信息" :column="1" border>
+          <el-descriptions-item label="文件名">
+            {{ fileInfo.name }}
+          </el-descriptions-item>
+          <el-descriptions-item label="文件大小">
+            {{ formatFileSize(fileInfo.size) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="分片大小">
+            {{ formatFileSize(chunkSize) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="总分片数">
+            {{ Math.ceil(fileInfo.size / chunkSize) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="文件预览">
+            <el-image
+              :src="previewUrl" :preview-src-list="[previewUrl]" fit="cover" class="preview-image" alt="预览图片"
+              style="width: 100px; height: 100px"
+            />
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+
+      <div v-if="uploadProgress > 0" class="progress-container">
+        <el-progress :percentage="uploadProgress" :status="uploadStatus" />
+      </div>
+
+      <div class="button-group">
+        <el-button
+          type="primary" :disabled="!fileInfo.name || isUploading" :loading="isUploading"
+          @click="handleUpload"
+        >
+          {{ isUploading ? '上传中...' : '开始上传' }}
+        </el-button>
+        <el-button @click="resetUpload">
+          重置
+        </el-button>
+      </div>
+    </el-card>
+
+    <el-dialog v-model="previewDialogVisible" title="预览">
+      <img v-if="previewUrl" :src="previewUrl" class="preview-image" alt="预览图片">
+    </el-dialog>
+  </div>
+</template>
 
 <style scoped>
 .upload-container {

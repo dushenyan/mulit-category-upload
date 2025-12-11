@@ -6,11 +6,11 @@
 
     /* Linting */
     "strict": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue","server/index.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "server/index.ts"]
 }

@@ -7,10 +7,10 @@ import SparkMD5 from 'spark-md5'
  */
 export function genrateFileHash(file: File) {
   return new Promise((resolve) => {
-    const spark = new SparkMD5.ArrayBuffer();
-    const reader = new FileReader();
-    const size = file.size;
-    const offset = 2 * 1024 * 1024;
+    const spark = new SparkMD5.ArrayBuffer()
+    const reader = new FileReader()
+    const size = file.size
+    const offset = 2 * 1024 * 1024
 
     // 读取文件前2M，中间2M，最后2M的内容来计算hash
     const chunks = [
@@ -19,18 +19,19 @@ export function genrateFileHash(file: File) {
       file.slice(size - offset, size),
     ]
 
-    let currentChunkIndex = 0;
+    let currentChunkIndex = 0
     reader.onload = (e) => {
-      spark.append(e.target?.result as ArrayBuffer);
-      currentChunkIndex++;
+      spark.append(e.target?.result as ArrayBuffer)
+      currentChunkIndex++
       if (currentChunkIndex < chunks.length) {
-        reader.readAsArrayBuffer(chunks[currentChunkIndex] as Blob);
-      } else {
-        resolve(spark.end());
+        reader.readAsArrayBuffer(chunks[currentChunkIndex] as Blob)
+      }
+      else {
+        resolve(spark.end())
       }
     }
 
-    reader.readAsArrayBuffer(chunks[currentChunkIndex] as Blob);
+    reader.readAsArrayBuffer(chunks[currentChunkIndex] as Blob)
   })
 }
 
@@ -41,15 +42,15 @@ export function genrateFileHash(file: File) {
  * @returns 分片数组
  */
 export function createChunks(file: File, offset: number) {
-  const chunks = [];
-  let start = 0;
+  const chunks = []
+  let start = 0
   while (start < file.size) {
     chunks.push({
       index: chunks.length,
-      file: file.slice(start, start + offset)
+      file: file.slice(start, start + offset),
     })
-    start += offset;
+    start += offset
   }
 
-  return chunks;
+  return chunks
 }

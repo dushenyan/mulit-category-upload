@@ -13,5 +13,6 @@ export default antfu({
   rules: {
     'no-console': 'off',
     'ts/explicit-function-return-type': 'off',
+    'regexp/no-unused-capturing-group': 'off',
   },
 })
