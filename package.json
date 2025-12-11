@@ -4,7 +4,7 @@
   "description": "多分类上传组件，支持文件分类管理",
   "author": "dushenyan <dushenyan88@gmail.com>",
   "repository": "https://github.com/dushenyan/mulit-category-upload",
-  "icon": "https://cdn.jsdelivr.net/npm/simple-icons@v10/icons/element.svg",
+  "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v10/icons/element.svg",
   "scripts": {
     "dev": "npm-run-all --parallel serve dev:client",
     "dev:client": "vite",
